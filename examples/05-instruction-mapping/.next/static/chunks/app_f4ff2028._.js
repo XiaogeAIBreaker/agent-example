@@ -609,7 +609,8 @@ function useInstructionMapping({ todos, setTodos }) {
     // 添加待办事项函数
     const addTodoFunction = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
         "useInstructionMapping.useCallback[addTodoFunction]": (taskText)=>{
-            if (!taskText || taskText.trim() === '') {
+            const task = typeof taskText === 'string' ? taskText : String(taskText || '');
+            if (!task || task.trim() === '') {
                 return {
                     success: false,
                     message: '任务内容不能为空'
@@ -617,7 +618,7 @@ function useInstructionMapping({ todos, setTodos }) {
             }
             const newTodo = {
                 id: Date.now(),
-                text: taskText.trim(),
+                text: task.trim(),
                 completed: false
             };
             setTodos([
@@ -626,7 +627,7 @@ function useInstructionMapping({ todos, setTodos }) {
             ]);
             return {
                 success: true,
-                message: `已添加任务: ${taskText}`,
+                message: `已添加任务: ${task}`,
                 data: newTodo
             };
         }

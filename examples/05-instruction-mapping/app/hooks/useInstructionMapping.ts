@@ -9,8 +9,10 @@ interface UseInstructionMappingProps {
 export function useInstructionMapping({ todos, setTodos }: UseInstructionMappingProps) {
   
   // 添加待办事项函数
-  const addTodoFunction = useCallback((taskText?: string): ExecutionResult => {
-    if (!taskText || taskText.trim() === '') {
+  const addTodoFunction = useCallback((taskText?: string | number): ExecutionResult => {
+    const task = typeof taskText === 'string' ? taskText : String(taskText || '');
+    
+    if (!task || task.trim() === '') {
       return {
         success: false,
         message: '任务内容不能为空'
@@ -19,7 +21,7 @@ export function useInstructionMapping({ todos, setTodos }: UseInstructionMapping
 
     const newTodo: Todo = {
       id: Date.now(),
-      text: taskText.trim(),
+      text: task.trim(),
       completed: false,
     };
     
@@ -27,7 +29,7 @@ export function useInstructionMapping({ todos, setTodos }: UseInstructionMapping
     
     return {
       success: true,
-      message: `已添加任务: ${taskText}`,
+      message: `已添加任务: ${task}`,
       data: newTodo
     };
   }, [todos, setTodos]);
