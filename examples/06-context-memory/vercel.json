@@ -4,9 +4,7 @@
       "maxDuration": 30
     }
   },
-  "build": {
-    "env": {
-      "NPM_FLAGS": "--legacy-peer-deps"
-    }
-  }
+  "buildCommand": "yarn build",
+  "devCommand": "yarn dev",
+  "installCommand": "yarn install"
 } 
