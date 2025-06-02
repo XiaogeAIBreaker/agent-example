@@ -1,8 +1,8 @@
 {
-  "name": "06-context-memory",
+  "name": "07-enhanced-prompt",
   "version": "0.1.0",
   "private": true,
-  "description": "智能待办事项应用 - 上下文记忆功能",
+  "description": "智能待办事项应用 - 增强提示 + Token长度控制功能",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -15,7 +15,8 @@
     "next": "15.3.2",
     "@ai-sdk/deepseek": "^0.2.14",
     "@ai-sdk/react": "^1.2.12",
-    "ai": "^4.3.16"
+    "ai": "^4.3.16",
+    "tiktoken": "^1.0.17"
   },
   "devDependencies": {
     "typescript": "^5",

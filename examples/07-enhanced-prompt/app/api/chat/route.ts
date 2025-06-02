@@ -1,5 +1,6 @@
 import { streamText } from 'ai';
 import { createDeepSeek } from '@ai-sdk/deepseek';
+import { trimMessagesToTokenLimitSync, getTotalTokenCountSync } from '../../utils/tokenTrimmer';
 
 // 允许流式响应最长30秒
 export const maxDuration = 30;
@@ -96,10 +97,48 @@ JSON指令格式：
 - 对于模糊的引用，要基于历史上下文做出合理判断
 - 始终保持友好和准确的回复`;
 
+    // 创建包含系统提示的完整消息数组
+    const systemMessage = { role: 'system' as const, content: systemPrompt };
+    const allMessages = [systemMessage, ...messages];
+
+    // 在发送请求前进行Token长度控制
+    const maxTokens = 3000; // DeepSeek-chat 的Token限制
+    
+    // 使用同步方法进行初始估算
+    const originalTokenCount = getTotalTokenCountSync(allMessages);
+    
+    console.log(`原始消息Token数量 (估算): ${originalTokenCount}`);
+    
+    // 如果Token数量超出限制，进行裁剪
+    let trimmedMessages = allMessages;
+    if (originalTokenCount > maxTokens) {
+      try {
+        // 保留系统消息，只裁剪对话历史
+        const conversationMessages = messages;
+        const systemTokens = getTotalTokenCountSync([systemMessage]);
+        const maxConversationTokens = maxTokens - systemTokens - 200; // 预留响应空间
+        
+        const trimmedConversation = trimMessagesToTokenLimitSync(
+          conversationMessages, 
+          maxConversationTokens
+        );
+        
+        trimmedMessages = [systemMessage, ...trimmedConversation];
+        
+        const trimmedTokenCount = getTotalTokenCountSync(trimmedMessages);
+        console.log(`裁剪后消息Token数量 (估算): ${trimmedTokenCount}`);
+        console.log(`裁剪了 ${messages.length - trimmedConversation.length} 条历史消息`);
+      } catch (error) {
+        console.warn('Token裁剪失败，使用原始消息:', error);
+        // 如果裁剪失败，尝试简单的消息数量限制
+        const maxMessageCount = Math.min(messages.length, 10);
+        trimmedMessages = [systemMessage, ...messages.slice(-maxMessageCount)];
+      }
+    }
+
     const result = await streamText({
       model: deepseek('deepseek-chat'),
-      system: systemPrompt,
-      messages,
+      messages: trimmedMessages,
       maxTokens: 1000,
       temperature: 0.7,
     });

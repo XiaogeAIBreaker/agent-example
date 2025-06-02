@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from 'ai/react';
 import { useInstructionExecutor } from '../hooks/useInstructionExecutor';
+import { useTokenStats } from '../hooks/useTokenStats';
 import { Instruction, ExecutionResult } from '../utils/instructionMapper';
 
 interface ChatSidebarProps {
@@ -32,6 +33,9 @@ export default function ChatSidebar({ executeInstruction }: ChatSidebarProps) {
       }
     }
   });
+
+  // 使用Token统计hook
+  const tokenStats = useTokenStats(messages, 3000);
 
   // 自动滚动到底部
   const scrollToBottom = () => {
@@ -124,6 +128,15 @@ export default function ChatSidebar({ executeInstruction }: ChatSidebarProps) {
   const lastTask = getLastAddedTask();
   const recentActions = getRecentActions();
 
+  // 获取Token警告颜色
+  const getTokenWarningColor = () => {
+    switch (tokenStats.warningLevel) {
+      case 'danger': return 'text-red-600 dark:text-red-400 font-medium';
+      case 'warning': return 'text-orange-600 dark:text-orange-400 font-medium';
+      default: return '';
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg h-full flex flex-col">
       {/* 头部 */}
@@ -145,9 +158,25 @@ export default function ChatSidebar({ executeInstruction }: ChatSidebarProps) {
           </button>
         </div>
         
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          支持上下文对话 | 消息: {messages.length}
-        </p>
+        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <span>支持上下文对话 | 消息: {messages.length}</span>
+          <div className="flex items-center gap-1">
+            <span className={getTokenWarningColor()}>
+              Token: {tokenStats.totalTokens}/3000
+            </span>
+            {tokenStats.isEstimated && (
+              <span className="text-yellow-600 dark:text-yellow-400" title="使用估算方法">
+                ~
+              </span>
+            )}
+          </div>
+        </div>
+        
+        {tokenStats.isNearLimit && (
+          <div className="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded text-xs text-orange-700 dark:text-orange-400">
+            ⚠️ Token使用量较高，较早的对话可能会被自动裁剪
+          </div>
+        )}
         
         {lastTask && (
           <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
@@ -166,6 +195,50 @@ export default function ChatSidebar({ executeInstruction }: ChatSidebarProps) {
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               📋 对话上下文
             </h3>
+            
+            {/* Token使用统计 */}
+            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-sm">
+              <strong>Token使用情况:</strong>
+              <div className="mt-1 space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span>当前使用:</span>
+                  <span className={getTokenWarningColor()}>
+                    {tokenStats.totalTokens}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>用户消息:</span>
+                  <span>{tokenStats.userTokens}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>AI回复:</span>
+                  <span>{tokenStats.assistantTokens}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>平均/消息:</span>
+                  <span>{tokenStats.averageTokensPerMessage}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>限制:</span>
+                  <span>3000</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>剩余:</span>
+                  <span className={tokenStats.isNearLimit ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}>
+                    {3000 - tokenStats.totalTokens}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-2">
+                  <div 
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      tokenStats.warningLevel === 'danger' ? 'bg-red-500' :
+                      tokenStats.warningLevel === 'warning' ? 'bg-orange-500' : 'bg-blue-500'
+                    }`}
+                    style={{ width: `${Math.min((tokenStats.totalTokens / 3000) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
             
             {lastTask && (
               <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
