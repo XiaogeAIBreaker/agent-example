@@ -3,8 +3,5 @@
     "app/api/chat/route.ts": {
       "maxDuration": 30
     }
-  },
-  "buildCommand": "yarn build",
-  "devCommand": "yarn dev",
-  "installCommand": "yarn install"
+  }
 } 
