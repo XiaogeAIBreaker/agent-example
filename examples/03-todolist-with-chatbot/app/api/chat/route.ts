@@ -22,10 +22,14 @@ export async function POST(req: Request) {
     apiKey: process.env.DEEPSEEK_API_KEY,
   });
 
+  // 只使用最后一条消息
+  const lastMessage = messages[messages.length - 1];
+  const singleMessage = lastMessage ? [lastMessage] : [];
+
   // 使用 DeepSeek API
   const result = streamText({
     model: deepseek('deepseek-chat'),
-    messages,
+    messages: singleMessage,
   });
 
   return result.toDataStreamResponse();

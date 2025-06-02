@@ -23,6 +23,10 @@ export async function POST(req: Request) {
     apiKey: process.env.DEEPSEEK_API_KEY,
   });
 
+  // 只使用最后一条消息
+  const lastMessage = messages[messages.length - 1];
+  const singleMessage = lastMessage ? [lastMessage] : [];
+
   // 系统提示，引导模型输出结构化 JSON
   const systemPrompt = `你是一个待办事项助手。请根据用户的输入，输出结构化的 JSON 响应。
 
@@ -35,14 +39,13 @@ export async function POST(req: Request) {
 输出格式：
 { "action": "操作类型", "task": "任务内容", "response": "回复内容" }
 
-
 请确保输出的是有效的 JSON 格式。`;
 
   // 使用 DeepSeek API
   const result = streamText({
     model: deepseek('deepseek-chat'),
     system: systemPrompt,
-    messages,
+    messages: singleMessage,
     onFinish: async (completion) => {
       // 当流式响应完成后，解析 AI 返回的内容
       const aiResponse = completion.text;

@@ -210,7 +210,7 @@ function ChatSidebar({ executeInstruction, onInstructionExecuted }) {
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                             className: "text-lg font-semibold text-gray-800 dark:text-white",
-                            children: "🤖 AI 指令助手"
+                            children: "🤖 AI 指令助手 (无记忆模式)"
                         }, void 0, false, {
                             fileName: "[project]/app/components/ChatSidebar.tsx",
                             lineNumber: 64,
@@ -218,7 +218,7 @@ function ChatSidebar({ executeInstruction, onInstructionExecuted }) {
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                             className: "text-sm text-gray-600 dark:text-gray-400",
-                            children: "我可以通过指令映射直接操作你的待办事项"
+                            children: "每次对话都是独立的，AI 不会记住之前的内容"
                         }, void 0, false, {
                             fileName: "[project]/app/components/ChatSidebar.tsx",
                             lineNumber: 67,
@@ -266,7 +266,7 @@ function ChatSidebar({ executeInstruction, onInstructionExecuted }) {
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 className: "text-sm mt-1",
-                                children: "我可以直接执行待办事项操作"
+                                children: "⚠️ 无记忆模式：我无法记住之前的对话"
                             }, void 0, false, {
                                 fileName: "[project]/app/components/ChatSidebar.tsx",
                                 lineNumber: 82,
@@ -283,14 +283,14 @@ function ChatSidebar({ executeInstruction, onInstructionExecuted }) {
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                        children: "✅ “完成学习任务”"
+                                        children: "✅ “完成ID为1的任务”"
                                     }, void 0, false, {
                                         fileName: "[project]/app/components/ChatSidebar.tsx",
                                         lineNumber: 85,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                        children: "🗑️ “删除买菜任务”"
+                                        children: "🗑️ “删除包含'买菜'的任务”"
                                     }, void 0, false, {
                                         fileName: "[project]/app/components/ChatSidebar.tsx",
                                         lineNumber: 86,

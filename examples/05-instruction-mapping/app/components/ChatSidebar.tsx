@@ -62,10 +62,10 @@ export default function ChatSidebar({ executeInstruction, onInstructionExecuted 
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div>
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            🤖 AI 指令助手
+            🤖 AI 指令助手 (无记忆模式)
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            我可以通过指令映射直接操作你的待办事项
+            每次对话都是独立的，AI 不会记住之前的内容
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
             支持：添加、完成、删除、列表、清除等操作
@@ -79,11 +79,11 @@ export default function ChatSidebar({ executeInstruction, onInstructionExecuted 
           <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
             <p className="text-2xl mb-2">🎯</p>
             <p>你好！我是你的 AI 指令助手</p>
-            <p className="text-sm mt-1">我可以直接执行待办事项操作</p>
+            <p className="text-sm mt-1">⚠️ 无记忆模式：我无法记住之前的对话</p>
             <div className="mt-3 text-xs text-gray-400 dark:text-gray-500 space-y-1">
               <p>📝 &ldquo;添加学习 Python 任务&rdquo;</p>
-              <p>✅ &ldquo;完成学习任务&rdquo;</p>
-              <p>🗑️ &ldquo;删除买菜任务&rdquo;</p>
+              <p>✅ &ldquo;完成ID为1的任务&rdquo;</p>
+              <p>🗑️ &ldquo;删除包含&apos;买菜&apos;的任务&rdquo;</p>
               <p>📋 &ldquo;显示所有任务&rdquo;</p>
             </div>
           </div>

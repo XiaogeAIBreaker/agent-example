@@ -23,7 +23,13 @@ export async function POST(req: Request) {
     apiKey: process.env.DEEPSEEK_API_KEY,
   });
 
-  // 更新系统提示，强调指令映射功能
+  // 🔥 关键：只使用最后一条消息，实现无记忆模式
+  const lastMessage = messages[messages.length - 1];
+  const singleMessage = lastMessage ? [lastMessage] : [];
+
+  console.log('🔥 无记忆模式：只处理最后一条消息', lastMessage?.content);
+
+  // 更新系统提示，强调无记忆模式
   const systemPrompt = `你是一个智能待办事项助手，能够理解用户的自然语言指令并转换为结构化的操作指令。
 
 你的任务是：
@@ -33,8 +39,8 @@ export async function POST(req: Request) {
 
 支持的操作类型：
 - "add": 添加新的待办事项
-- "complete": 完成待办事项  
-- "delete": 删除待办事项
+- "complete": 完成待办事项（需要明确的任务ID或完整任务内容）
+- "delete": 删除待办事项（需要明确的任务ID或完整任务内容） 
 - "list": 列出所有待办事项
 - "clear_completed": 清除已完成的任务
 - "clear_all": 清除所有任务
@@ -44,7 +50,7 @@ export async function POST(req: Request) {
 
 对于不同类型的指令：
 - add: task字段包含要添加的任务内容
-- complete/delete: task字段包含要操作的任务关键词
+- complete/delete: task字段包含要操作的任务关键词或ID
 - list/clear_completed/clear_all: 不需要task字段
 
 重要提示：
@@ -58,13 +64,16 @@ export async function POST(req: Request) {
 输出：{ "action": "add", "task": "学习Python", "response": "好的，我来为你添加'学习Python'这个任务" }
 
 用户："完成学习任务"  
-输出：{ "action": "complete", "task": "学习", "response": "我来帮你完成包含'学习'关键词的任务" }`;
+输出：{ "action": "complete", "task": "学习", "response": "我来帮你完成包含'学习'关键词的任务" }
 
-  // 使用 DeepSeek API
+用户："删除刚才的任务"
+输出：抱歉，我无法记住之前的对话内容。请明确告诉我要删除哪个任务，比如"删除学习任务"或提供任务ID。`;
+
+  // 使用 DeepSeek API - 只传递单条消息
   const result = streamText({
     model: deepseek('deepseek-chat'),
     system: systemPrompt,
-    messages,
+    messages: singleMessage, // 🔥 关键：只传递最后一条消息
     onFinish: async (completion) => {
       // 当流式响应完成后，解析 AI 返回的内容
       const aiResponse = completion.text;
@@ -76,34 +85,31 @@ export async function POST(req: Request) {
         if (parsedAction) {
           console.log('解析到的指令:', parsedAction);
           
-          // 这里我们不再在服务端执行操作，而是让前端通过指令映射系统执行
-          // 前端将监听响应并解析JSON指令
-          
           // 在响应中添加执行结果标记，让前端知道这是一个指令
-          console.log(`[指令映射] 操作类型: ${parsedAction.action}, 任务: ${parsedAction.task || 'N/A'}`);
+          console.log(`[指令映射-无记忆模式] 操作类型: ${parsedAction.action}, 任务: ${parsedAction.task || 'N/A'}`);
           
           // 可以在这里添加日志记录或其他处理逻辑
           switch (parsedAction.action) {
             case 'add':
-              console.log(`[指令映射] 将添加任务: ${parsedAction.task}`);
+              console.log(`[指令映射-无记忆模式] 将添加任务: ${parsedAction.task}`);
               break;
             case 'complete':
-              console.log(`[指令映射] 将完成任务: ${parsedAction.task}`);
+              console.log(`[指令映射-无记忆模式] 将完成任务: ${parsedAction.task}`);
               break;
             case 'delete':
-              console.log(`[指令映射] 将删除任务: ${parsedAction.task}`);
+              console.log(`[指令映射-无记忆模式] 将删除任务: ${parsedAction.task}`);
               break;
             case 'list':
-              console.log(`[指令映射] 将列出所有任务`);
+              console.log(`[指令映射-无记忆模式] 将列出所有任务`);
               break;
             case 'clear_completed':
-              console.log(`[指令映射] 将清除已完成任务`);
+              console.log(`[指令映射-无记忆模式] 将清除已完成任务`);
               break;
             case 'clear_all':
-              console.log(`[指令映射] 将清除所有任务`);
+              console.log(`[指令映射-无记忆模式] 将清除所有任务`);
               break;
             default:
-              console.log(`[指令映射] 未知操作类型: ${parsedAction.action}`);
+              console.log(`[指令映射-无记忆模式] 未知操作类型: ${parsedAction.action}`);
           }
         } else {
           console.log('JSON解析失败，作为普通对话处理');

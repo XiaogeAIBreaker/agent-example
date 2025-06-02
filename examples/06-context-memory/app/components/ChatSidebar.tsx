@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from 'ai/react';
 import { useInstructionExecutor } from '../hooks/useInstructionExecutor';
-import { useMemory } from '../hooks/useMemory';
 import { Instruction, ExecutionResult } from '../utils/instructionMapper';
 
 interface ChatSidebarProps {
@@ -11,23 +10,28 @@ interface ChatSidebarProps {
 }
 
 export default function ChatSidebar({ executeInstruction }: ChatSidebarProps) {
-  const [showMemory, setShowMemory] = useState(false);
+  const [showContext, setShowContext] = useState(false);
   const [executionResults, setExecutionResults] = useState<Array<{id: string, message: string, success: boolean, timestamp: number}>>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // 使用记忆hook
-  const {
-    memory,
-    context,
-    recordUserMessage,
-    recordAIResponse,
-    resolveContextReference,
-    getContextSummary,
-    clearMemory
-  } = useMemory();
-  
   // 使用指令执行器
   const { parseAndExecuteMessage } = useInstructionExecutor({ executeInstruction });
+
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    api: '/api/chat',
+    onFinish: (message) => {
+      // 尝试执行AI回复中的指令
+      const result = parseAndExecuteMessage(message.content);
+      if (result) {
+        setExecutionResults(prev => [...prev.slice(-9), {
+          id: `result_${Date.now()}`,
+          message: result.message || '执行完成',
+          success: result.success,
+          timestamp: Date.now()
+        }]);
+      }
+    }
+  });
 
   // 自动滚动到底部
   const scrollToBottom = () => {
@@ -36,98 +40,89 @@ export default function ChatSidebar({ executeInstruction }: ChatSidebarProps) {
 
   useEffect(() => {
     scrollToBottom();
-  }, [memory, executionResults]);
+  }, [messages, executionResults]);
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
-    onFinish: (message) => {
-      console.log('AI 回复完成:', message.content);
-      console.log('开始解析和执行指令...');
-      
-      // 记录AI回复
-      recordAIResponse(message.content);
-      
-      // 尝试执行AI回复中的指令
-      const result = parseAndExecuteMessage(message.content);
-      if (result) {
-        console.log('指令执行结果:', result);
-        
-        // 添加执行结果到状态
-        setExecutionResults(prev => [...prev.slice(-9), {
-          id: `result_${Date.now()}`,
-          message: result.message || '执行完成',
-          success: result.success,
-          timestamp: Date.now()
-        }]);
-      } else {
-        console.log('没有找到可执行的指令');
+  // 从messages中提取上下文信息
+  const getLastAddedTask = () => {
+    // 从最近的消息中找到最后添加的任务
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role === 'assistant' && msg.content.includes('"action": "add"')) {
+        const match = msg.content.match(/"task":\s*"([^"]+)"/);
+        if (match) {
+          return match[1];
+        }
       }
     }
-  });
+    return null;
+  };
 
-  // 处理表单提交，添加上下文信息
+  // 从messages中获取最近的操作
+  const getRecentActions = () => {
+    const actions = [];
+    for (let i = messages.length - 1; i >= 0 && actions.length < 5; i--) {
+      const msg = messages[i];
+      if (msg.role === 'assistant') {
+        const actionMatch = msg.content.match(/"action":\s*"([^"]+)"/);
+        const taskMatch = msg.content.match(/"task":\s*"([^"]+)"/);
+        if (actionMatch) {
+          actions.unshift({
+            action: actionMatch[1],
+            task: taskMatch ? taskMatch[1] : '',
+            timestamp: Date.now() - (messages.length - 1 - i) * 60000 // 估算时间
+          });
+        }
+      }
+    }
+    return actions;
+  };
+
+  // 简单的上下文引用处理
+  const enhanceUserInput = (userInput: string) => {
+    const lastTask = getLastAddedTask();
+    
+    let enhancedInput = userInput;
+    
+    // 处理"刚才"、"最后"等引用
+    if (userInput.includes('刚才') || userInput.includes('最后') || userInput.includes('上个')) {
+      if (lastTask) {
+        enhancedInput += `\n(注：最近添加的任务是"${lastTask}")`;
+      }
+    }
+    
+    // 处理"再加"等重复操作
+    if (userInput.includes('再加') || userInput.includes('再添加')) {
+      if (lastTask) {
+        enhancedInput += `\n(注：上次添加的是"${lastTask}"，请添加类似的任务)`;
+      }
+    }
+    
+    return enhancedInput;
+  };
+
+  // 处理表单提交
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!input.trim() || isLoading) return;
     
-    const userInput = input.trim();
+    // 增强用户输入
+    const enhancedInput = enhanceUserInput(input.trim());
     
-    // 记录用户消息
-    recordUserMessage(userInput);
-    
-    // 解析上下文引用
-    const contextRef = resolveContextReference(userInput);
-    
-    // 获取上下文摘要
-    const contextSummary = getContextSummary();
-    
-    // 构建增强的提示词
-    let enhancedPrompt = userInput;
-    
-    if (contextRef) {
-      enhancedPrompt = `用户消息: ${userInput}\n\n上下文解析: ${contextRef.resolvedText}\n`;
-      
-      // 如果是任务引用，添加具体信息
-      if (contextRef.type === 'task_reference' && contextRef.taskId) {
-        enhancedPrompt += `引用的任务ID: ${contextRef.taskId}\n`;
-      }
-    }
-    
-    if (contextSummary) {
-      enhancedPrompt += `\n历史上下文:\n${contextSummary}`;
-    }
-    
-    enhancedPrompt += `\n请基于以上上下文理解用户的真实意图，并生成相应的操作指令。`;
-    
-    // 调用原始的handleSubmit，但先修改input值
-    handleInputChange({ target: { value: enhancedPrompt } } as React.ChangeEvent<HTMLInputElement>);
-    
-    // 立即提交表单
-    setTimeout(() => {
+    // 如果输入被增强了，先更新input然后提交
+    if (enhancedInput !== input.trim()) {
+      handleInputChange({ target: { value: enhancedInput } } as React.ChangeEvent<HTMLInputElement>);
+      setTimeout(() => {
+        handleSubmit(e);
+        handleInputChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>);
+      }, 0);
+    } else {
       handleSubmit(e);
-      // 恢复显示原始输入
-      handleInputChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>);
-    }, 0);
-  };
-
-  const formatTimestamp = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString('zh-CN', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
-
-  const getMemoryTypeLabel = (type: string) => {
-    switch (type) {
-      case 'user_message': return '💬 用户';
-      case 'ai_response': return '🤖 AI';
-      case 'action_executed': return '⚡ 执行';
-      case 'context_reference': return '🔗 引用';
-      default: return '📝';
     }
   };
+
+  const lastTask = getLastAddedTask();
+  const recentActions = getRecentActions();
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg h-full flex flex-col">
@@ -137,38 +132,27 @@ export default function ChatSidebar({ executeInstruction }: ChatSidebarProps) {
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
             🤖 AI 助手
           </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowMemory(!showMemory)}
-              className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                showMemory 
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                  : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-              }`}
-              title="切换记忆视图"
-            >
-              {showMemory ? '💬 对话' : '🧠 记忆'}
-            </button>
-            {memory.length > 0 && (
-              <button
-                onClick={clearMemory}
-                className="px-3 py-1 text-xs bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
-                title="清除记忆"
-              >
-                🗑️
-              </button>
-            )}
-          </div>
+          <button
+            onClick={() => setShowContext(!showContext)}
+            className={`px-3 py-1 text-xs rounded-full transition-colors ${
+              showContext 
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+            }`}
+            title="切换上下文视图"
+          >
+            {showContext ? '💬 对话' : '📋 上下文'}
+          </button>
         </div>
         
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          支持上下文对话 | 记忆条目: {memory.length}
+          支持上下文对话 | 消息: {messages.length}
         </p>
         
-        {context.lastAddedTask && (
+        {lastTask && (
           <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
             <span className="text-blue-600 dark:text-blue-400">
-              💡 最后添加: &ldquo;{context.lastAddedTask.text}&rdquo;
+              💡 最后添加: &ldquo;{lastTask}&rdquo;
             </span>
           </div>
         )}
@@ -176,112 +160,71 @@ export default function ChatSidebar({ executeInstruction }: ChatSidebarProps) {
 
       {/* 内容区域 */}
       <div className="flex-1 p-4 overflow-y-auto">
-        {showMemory ? (
-          // 记忆视图
+        {showContext ? (
+          // 上下文视图
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              📝 对话记忆
+              📋 对话上下文
             </h3>
-            {memory.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-4">
-                暂无记忆记录
-              </p>
-            ) : (
-              memory.map((entry) => (
-                <div
-                  key={entry.id}
-                  className={`p-2 rounded-lg text-xs ${
-                    entry.type === 'user_message'
-                      ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-300'
-                      : entry.type === 'ai_response'
-                      ? 'bg-green-50 dark:bg-green-900/20 border-l-2 border-green-300'
-                      : entry.type === 'action_executed'
-                      ? 'bg-yellow-50 dark:bg-yellow-900/20 border-l-2 border-yellow-300'
-                      : 'bg-purple-50 dark:bg-purple-900/20 border-l-2 border-purple-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium">
-                      {getMemoryTypeLabel(entry.type)}
-                    </span>
-                    <span className="text-gray-400">
-                      {formatTimestamp(entry.timestamp)}
-                    </span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300">
-                    {entry.content}
-                  </p>
-                  {entry.metadata && (
-                    <div className="mt-1 text-gray-500">
-                      {entry.metadata.action && (
-                        <span>动作: {entry.metadata.action}</span>
-                      )}
-                      {entry.metadata.taskId && (
-                        <span> | ID: {entry.metadata.taskId}</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))
+            
+            {lastTask && (
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
+                <strong>最后添加的任务:</strong> {lastTask}
+              </div>
             )}
+            
+            {recentActions.length > 0 && (
+              <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm">
+                <strong>最近操作:</strong>
+                <ul className="mt-1 space-y-1">
+                  {recentActions.map((action, index) => (
+                    <li key={index} className="text-xs">
+                      • {action.action}: {action.task}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <div className="p-2 bg-gray-50 dark:bg-gray-900/20 rounded-lg text-sm">
+              <strong>对话历史:</strong> {messages.length} 条消息
+            </div>
           </div>
         ) : (
           // 对话视图
           <div className="space-y-4">
-            {messages.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
-                  👋 你好！我是你的AI助手
-                </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">
-                  我可以帮你管理待办事项，支持以下功能：
-                </p>
-                <div className="mt-2 text-xs text-gray-400 space-y-1">
-                  <p>✅ &ldquo;帮我添加一个学习任务&rdquo;</p>
-                  <p>🔄 &ldquo;再加一个类似的任务&rdquo;</p>
-                  <p>✅ &ldquo;完成刚才那个任务&rdquo;</p>
-                  <p>🗑️ &ldquo;把最后添加的删了&rdquo;</p>
-                  <p>📋 &ldquo;显示所有任务&rdquo;</p>
-                </div>
+            {messages.length === 0 && (
+              <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
+                <p className="text-2xl mb-2">👋</p>
+                <p>你好！我是你的 AI 助手</p>
+                <p className="text-sm mt-1">支持上下文对话，试试说&ldquo;再加一个任务&rdquo;</p>
               </div>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  <div
-                    className={`max-w-[80%] p-3 rounded-lg text-sm ${
-                      message.role === 'user'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white'
-                    }`}
-                  >
-                    {/* 只显示用户原始输入，不显示增强后的提示词 */}
-                    {message.role === 'user' ? (
-                      message.content.split('\n')[0].replace('用户消息: ', '')
-                    ) : (
-                      message.content
-                    )}
-                  </div>
-                </div>
-              ))
             )}
             
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] px-3 py-2 rounded-lg text-sm ${
+                    message.role === 'user'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white'
+                  }`}
+                >
+                  <div className="whitespace-pre-wrap">{message.content}</div>
+                </div>
+              </div>
+            ))}
+
             {/* 显示执行结果 */}
             {executionResults.map((result) => (
               <div key={result.id} className="flex justify-center">
-                <div className={`max-w-[90%] px-3 py-2 rounded-lg text-sm border ${
-                  result.success 
-                    ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-800 dark:text-green-300'
-                    : 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 text-red-800 dark:text-red-300'
-                }`}>
+                <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-300 px-3 py-2 rounded-lg text-sm max-w-[90%]">
                   <div className="flex items-center gap-2">
-                    <span>{result.success ? '✅' : '❌'}</span>
-                    <span className="font-medium">指令执行:</span>
-                    <span>{result.message}</span>
+                    <span className="text-green-600">⚡</span>
+                    <span>指令执行结果：{result.success ? '✅' : '❌'} {result.message}</span>
                   </div>
                 </div>
               </div>
@@ -289,11 +232,10 @@ export default function ChatSidebar({ executeInstruction }: ChatSidebarProps) {
             
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white p-3 rounded-lg text-sm">
-                  <div className="flex items-center space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 rounded-lg text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
+                    <span>正在思考中...</span>
                   </div>
                 </div>
               </div>
@@ -305,46 +247,22 @@ export default function ChatSidebar({ executeInstruction }: ChatSidebarProps) {
       </div>
 
       {/* 输入区域 */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <form onSubmit={handleFormSubmit} className="space-y-2">
-          <div className="flex gap-2">
-            <input
-              value={input}
-              onChange={handleInputChange}
-              placeholder="输入消息，支持上下文引用..."
-              className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-              disabled={isLoading}
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !input.trim()}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm font-medium"
-            >
-              {isLoading ? '⏳' : '发送'}
-            </button>
-          </div>
-          
-          {/* 快捷输入建议 */}
-          <div className="flex flex-wrap gap-1">
-            {[
-              '再加一个任务',
-              '完成刚才那个',
-              '删除最后一个',
-              '显示所有任务'
-            ].map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                onClick={() => {
-                  handleInputChange({ target: { value: suggestion } } as React.ChangeEvent<HTMLInputElement>);
-                }}
-                className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded transition-colors"
-                disabled={isLoading}
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
+      <div className="border-t border-gray-200 dark:border-gray-700 p-3">
+        <form onSubmit={handleFormSubmit} className="flex gap-2">
+          <input
+            value={input}
+            onChange={handleInputChange}
+            placeholder="输入消息，支持'再加一个'、'完成刚才的'等上下文指令..."
+            disabled={isLoading}
+            className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={isLoading || !input.trim()}
+            className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            发送
+          </button>
         </form>
       </div>
     </div>
