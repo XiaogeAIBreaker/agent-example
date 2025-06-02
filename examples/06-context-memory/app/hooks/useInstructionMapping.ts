@@ -3,41 +3,41 @@ import { instructionMapper, Instruction, Todo, ExecutionResult, findTodoByText }
 
 interface UseInstructionMappingProps {
   todos: Todo[];
-  setTodos: (todos: Todo[]) => void;
-  // 添加记忆回调函数
-  onActionExecuted?: (action: string, taskId?: number, taskText?: string) => void;
+  setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
 }
 
-export function useInstructionMapping({ todos, setTodos, onActionExecuted }: UseInstructionMappingProps) {
+export function useInstructionMapping({ todos, setTodos }: UseInstructionMappingProps) {
   
-  // 添加待办事项函数
-  const addTodoFunction = useCallback((taskText?: string | number): ExecutionResult => {
-    const task = typeof taskText === 'string' ? taskText : String(taskText || '');
+  // 添加新任务
+  const addTodo = useCallback((params?: string | number | undefined): ExecutionResult => {
+    const text = typeof params === 'string' ? params : String(params || '');
     
-    if (!task || task.trim() === '') {
-      return {
-        success: false,
-        message: '任务内容不能为空'
-      };
+    if (text.trim() === '') {
+      return { success: false, message: '任务内容不能为空' };
+    }
+
+    const existingTodo = todos.find(todo => 
+      todo.text.toLowerCase() === text.toLowerCase()
+    );
+    
+    if (existingTodo) {
+      return { success: false, message: `任务 "${text}" 已经存在` };
     }
 
     const newTodo: Todo = {
       id: Date.now(),
-      text: task.trim(),
-      completed: false,
+      text: text.trim(),
+      completed: false
     };
     
-    setTodos([...todos, newTodo]);
+    setTodos(prev => [...prev, newTodo]);
     
-    // 记录到记忆中
-    onActionExecuted?.('add', newTodo.id, newTodo.text);
-    
-    return {
-      success: true,
-      message: `已添加任务: ${task}`,
+    return { 
+      success: true, 
+      message: `已添加任务: "${newTodo.text}"`,
       data: newTodo
     };
-  }, [todos, setTodos, onActionExecuted]);
+  }, [todos, setTodos]);
 
   // 完成待办事项函数
   const completeTodoFunction = useCallback((taskIdentifier?: string | number): ExecutionResult => {
@@ -76,15 +76,12 @@ export function useInstructionMapping({ todos, setTodos, onActionExecuted }: Use
     
     setTodos(updatedTodos);
     
-    // 记录到记忆中
-    onActionExecuted?.('complete', targetTodo.id, targetTodo.text);
-    
     return {
       success: true,
       message: `已完成任务: ${targetTodo.text}`,
       data: { ...targetTodo, completed: true }
     };
-  }, [todos, setTodos, onActionExecuted]);
+  }, [todos, setTodos]);
 
   // 删除待办事项函数
   const deleteTodoFunction = useCallback((taskIdentifier?: string | number): ExecutionResult => {
@@ -113,30 +110,24 @@ export function useInstructionMapping({ todos, setTodos, onActionExecuted }: Use
     const updatedTodos = todos.filter(todo => todo.id !== targetTodo!.id);
     setTodos(updatedTodos);
     
-    // 记录到记忆中
-    onActionExecuted?.('delete', targetTodo.id, targetTodo.text);
-    
     return {
       success: true,
       message: `已删除任务: ${targetTodo.text}`,
       data: targetTodo
     };
-  }, [todos, setTodos, onActionExecuted]);
+  }, [todos, setTodos]);
 
   // 列出所有待办事项函数
   const listTodosFunction = useCallback((): ExecutionResult => {
     const completedCount = todos.filter(todo => todo.completed).length;
     const pendingCount = todos.length - completedCount;
     
-    // 记录到记忆中
-    onActionExecuted?.('list');
-    
     return {
       success: true,
       message: `共有 ${todos.length} 个任务，其中 ${completedCount} 个已完成，${pendingCount} 个待完成`,
       data: todos
     };
-  }, [todos, onActionExecuted]);
+  }, [todos]);
 
   // 清除已完成任务函数
   const clearCompletedFunction = useCallback((): ExecutionResult => {
@@ -152,15 +143,12 @@ export function useInstructionMapping({ todos, setTodos, onActionExecuted }: Use
     const updatedTodos = todos.filter(todo => !todo.completed);
     setTodos(updatedTodos);
     
-    // 记录到记忆中
-    onActionExecuted?.('clear_completed');
-    
     return {
       success: true,
       message: `已清除 ${completedTodos.length} 个已完成的任务`,
       data: completedTodos
     };
-  }, [todos, setTodos, onActionExecuted]);
+  }, [todos, setTodos]);
 
   // 清除所有任务函数
   const clearAllFunction = useCallback((): ExecutionResult => {
@@ -174,26 +162,23 @@ export function useInstructionMapping({ todos, setTodos, onActionExecuted }: Use
     const clearedCount = todos.length;
     setTodos([]);
     
-    // 记录到记忆中
-    onActionExecuted?.('clear_all');
-    
     return {
       success: true,
       message: `已清除所有 ${clearedCount} 个任务`,
       data: todos
     };
-  }, [todos, setTodos, onActionExecuted]);
+  }, [todos, setTodos]);
 
   // 注册所有函数到映射器
   useEffect(() => {
-    instructionMapper.registerFunction('add', addTodoFunction);
+    instructionMapper.registerFunction('add', addTodo);
     instructionMapper.registerFunction('complete', completeTodoFunction);
     instructionMapper.registerFunction('delete', deleteTodoFunction);
     instructionMapper.registerFunction('list', listTodosFunction);
     instructionMapper.registerFunction('clear_completed', clearCompletedFunction);
     instructionMapper.registerFunction('clear_all', clearAllFunction);
   }, [
-    addTodoFunction,
+    addTodo,
     completeTodoFunction,
     deleteTodoFunction,
     listTodosFunction,
@@ -218,7 +203,7 @@ export function useInstructionMapping({ todos, setTodos, onActionExecuted }: Use
     executeInstruction,
     getSupportedActions,
     // 直接导出各个函数，以便组件可以直接调用
-    addTodo: addTodoFunction,
+    addTodo,
     completeTodo: completeTodoFunction,
     deleteTodo: deleteTodoFunction,
     listTodos: listTodosFunction,

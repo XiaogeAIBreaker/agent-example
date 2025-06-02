@@ -4,16 +4,12 @@ import { useState } from 'react';
 import ChatSidebar from './components/ChatSidebar';
 import { Todo } from './utils/instructionMapper';
 import { useInstructionMapping } from './hooks/useInstructionMapping';
-import { useMemory } from './hooks/useMemory';
 
 export default function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [inputValue, setInputValue] = useState('');
 
-  // 使用记忆hook
-  const { recordAction } = useMemory();
-
-  // 使用指令映射hook，传递记忆回调
+  // 使用指令映射hook
   const { 
     executeInstruction, 
     getSupportedActions,
@@ -22,8 +18,7 @@ export default function TodoList() {
     clearAll: clearAllFunction
   } = useInstructionMapping({ 
     todos, 
-    setTodos, 
-    onActionExecuted: recordAction 
+    setTodos
   });
 
   // 本地添加任务（通过UI直接操作）
