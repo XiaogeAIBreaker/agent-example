@@ -1,45 +1,35 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
-import { Instruction, ExecutionResult } from '../utils/instructionMapper';
-import { useInstructionExecutor } from '../hooks/useInstructionExecutor';
+import { parseInstruction, execute } from '../utils/instructionMapper';
 
-// 定义组件props
 interface ChatSidebarProps {
-  executeInstruction?: (instruction: Instruction) => ExecutionResult;
-  onInstructionExecuted?: (result: { success: boolean; message?: string }) => void;
+  onTasksUpdated?: () => void;
 }
 
-export default function ChatSidebar({ executeInstruction, onInstructionExecuted }: ChatSidebarProps) {
+export default function ChatSidebar({ onTasksUpdated }: ChatSidebarProps) {
   const [executionResults, setExecutionResults] = useState<string[]>([]);
-  
-  // 指令执行器
-  const { parseAndExecuteMessage } = useInstructionExecutor({
-    executeInstruction: executeInstruction || (() => ({ success: false, message: '指令执行器未配置' }))
-  });
   
   const { messages, input, handleInputChange, handleSubmit, status } = useChat({
     api: '/api/chat',
     onFinish: (message) => {
-      // 当AI响应完成时，尝试执行指令
-      if (executeInstruction) {
-        const result = parseAndExecuteMessage(message.content);
+      // 解析 AI 返回的指令
+      const instruction = parseInstruction(message.content);
+      if (instruction) {
+        // 执行指令
+        const result = execute(instruction);
         
-        if (result) {
-          const resultText = result.success 
-            ? `✅ ${result.message}` 
-            : `❌ ${result.message}`;
-            
-          setExecutionResults(prev => [...prev, resultText]);
+        const resultText = result.success 
+          ? `✅ ${result.message}` 
+          : `❌ ${result.message}`;
           
-          // 通知父组件
-          if (onInstructionExecuted) {
-            onInstructionExecuted({ 
-              success: result.success, 
-              message: result.message 
-            });
-          }
+        setExecutionResults(prev => [...prev, resultText]);
+        
+        // 通知父组件更新任务列表
+        if (onTasksUpdated) {
+          onTasksUpdated();
         }
       }
     }
@@ -62,13 +52,13 @@ export default function ChatSidebar({ executeInstruction, onInstructionExecuted 
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div>
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            🤖 AI 指令助手 (无记忆模式)
+            🤖 AI 指令助手 (简单版)
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            每次对话都是独立的，AI 不会记住之前的内容
+            演示最基础的指令执行流程
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-            支持：添加、完成、删除、列表、清除等操作
+            支持：添加、列表、清空操作
           </p>
         </div>
       </div>
@@ -79,12 +69,11 @@ export default function ChatSidebar({ executeInstruction, onInstructionExecuted 
           <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
             <p className="text-2xl mb-2">🎯</p>
             <p>你好！我是你的 AI 指令助手</p>
-            <p className="text-sm mt-1">⚠️ 无记忆模式：我无法记住之前的对话</p>
+            <p className="text-sm mt-1">✨ 简单版：演示基础指令执行</p>
             <div className="mt-3 text-xs text-gray-400 dark:text-gray-500 space-y-1">
-              <p>📝 &ldquo;添加学习 Python 任务&rdquo;</p>
-              <p>✅ &ldquo;完成ID为1的任务&rdquo;</p>
-              <p>🗑️ &ldquo;删除包含&apos;买菜&apos;的任务&rdquo;</p>
+              <p>📝 &ldquo;添加学习 JavaScript 任务&rdquo;</p>
               <p>📋 &ldquo;显示所有任务&rdquo;</p>
+              <p>🗑️ &ldquo;清空所有任务&rdquo;</p>
             </div>
           </div>
         )}
@@ -150,6 +139,24 @@ export default function ChatSidebar({ executeInstruction, onInstructionExecuted 
             执行
           </button>
         </form>
+        
+        {/* 快捷操作按钮 */}
+        <div className="mt-2 flex flex-wrap gap-1">
+          {[
+            '添加学习任务',
+            '列出所有任务',
+            '清空任务'
+          ].map((example) => (
+            <button
+              key={example}
+              onClick={() => handleInputChange({ target: { value: example } } as any)}
+              className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors duration-200"
+              disabled={isLoading}
+            >
+              {example}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
