@@ -1,43 +1,42 @@
-# 05.5 - 简单指令执行
+# 06 - 简单上下文记忆
 
 ## 项目简介
 
-这是一个 **最小可用** 的对话式智能体案例，用于演示 **"输入自然语言 ➝ 输出 JSON 指令 ➝ 执行任务"** 的完整闭环。
+这是一个支持 **上下文记忆** 的对话式智能体案例，演示如何通过 **保持完整对话历史** 来实现简单而有效的上下文记忆功能。
 
-这个案例位于 `05-instruction-mapping`（复杂指令映射）和 `06-context-memory`（上下文记忆）之间，作为学习过渡，帮助理解最基础的 AI 指令执行原理。
+基于 `05.5-simple-instruction-execution` 的基础上，添加了上下文记忆能力，AI 能够理解诸如"再加一个"、"刚才那个"等引用。
 
 ## 🎯 核心目标
 
-构建一个最简单的智能助手，实现：
+在简单指令执行的基础上，增加：
 
-1. **自然语言输入**: 用户用中文说出需求
-2. **AI 理解转换**: 转换为结构化 JSON 指令
-3. **本地函数执行**: 根据指令执行相应操作
-4. **实时结果反馈**: 立即显示执行结果
+1. **上下文记忆**: 通过完整的 messages 历史实现记忆
+2. **引用理解**: 理解"再加一个"、"刚才那个"等上下文引用
+3. **记忆可视化**: 提供上下文信息的可视化展示
+4. **智能交互**: 基于历史上下文的智能对话
 
 ## 💫 核心特性
 
-### ✨ 极简设计
-- 只有 3 个基本操作：添加、列表、清空
-- 无复杂的映射系统或历史记忆
-- 专注于演示核心流程
+### 🧠 简单记忆机制
+- **完整历史**: 保持所有 messages 在数组中
+- **发送历史**: 每次请求都发送完整对话历史给 AI
+- **AI 理解**: AI 通过历史上下文理解引用含义
 
-### 🔄 完整闭环
-```
-用户输入 → AI理解 → JSON指令 → 函数执行 → 结果显示
-    ↑                                           ↓
-    ←────────── UI更新 ←──────────────────────←
-```
+### 🔗 上下文引用支持
+- **"再加一个"**: 基于最后添加的任务类型
+- **"刚才那个"**: 引用最近的操作或任务
+- **"最后添加的"**: 精确引用最后添加的任务
+- **"清空所有"**: 基于历史理解清空操作
 
-### 📱 直观界面
-- **左侧**: 实时任务列表 + 执行结果
-- **右侧**: 对话界面 + 快捷按钮
+### 📱 双视图界面
+- **对话视图**: 标准的聊天界面
+- **上下文视图**: 展示记忆信息和操作历史
 
 ## 🚀 快速开始
 
 ### 1. 安装依赖
 ```bash
-cd examples/05.5-simple-instruction-execution
+cd examples/06-simple-context-memory
 npm install
 ```
 
@@ -54,12 +53,12 @@ npm run dev
 
 访问 http://localhost:3000
 
-## 📝 使用示例
+## 📝 上下文记忆示例
 
-### 基础操作
+### 基础对话记忆
 ```
-用户: "帮我添加一个学习JavaScript的任务"
-AI: 好的！我已经为您添加了任务。
+用户: "添加学习JavaScript的任务"
+AI: 好的！我来添加学习JavaScript的任务。
     ```json
     {
       "action": "add",
@@ -67,179 +66,135 @@ AI: 好的！我已经为您添加了任务。
       "response": "已添加任务：学习JavaScript"
     }
     ```
-系统: 执行结果: 已添加任务：学习JavaScript
+
+用户: "再加一个类似的任务"  ← 上下文引用
+AI: 我来再添加一个学习相关的任务！
+    ```json
+    {
+      "action": "add",
+      "task": "学习React",
+      "response": "已添加类似任务：学习React"
+    }
+    ```
 ```
 
-### 列出任务
+### 引用理解
 ```
-用户: "显示我的所有任务"
-AI: 当前的任务列表如下：
+用户: "刚才那个任务完成了吗？"
+AI: 根据我们的对话，您最近添加的是"学习React"任务，这个任务还未完成。
+
+用户: "列出所有任务"
+AI: 让我为您列出当前的所有任务。
     ```json
     {
       "action": "list",
-      "response": "已为您列出所有任务"
+      "response": "当前任务列表"
     }
     ```
-系统: 执行结果: 当前任务：
-      1. 学习JavaScript
 ```
 
-### 清空任务
-```
-用户: "清空所有任务"
-AI: 好的，我来清空所有任务。
-    ```json
-    {
-      "action": "clear",
-      "response": "已清空所有任务"
-    }
-    ```
-系统: 执行结果: 已清空 1 个任务
-```
+## 🏗️ 实现原理
 
-## 🏗️ 项目结构
-
-```
-05.5-simple-instruction-execution/
-├── app/
-│   ├── api/chat/route.ts          # AI 聊天接口
-│   ├── layout.tsx                 # 根布局
-│   ├── page.tsx                   # 主页面
-│   └── globals.css                # 全局样式
-├── components/
-│   └── ChatSidebar.tsx            # 主要 UI 组件
-├── utils/
-│   └── instructionMapper.ts       # 指令解析和执行
-├── package.json
-└── README.md
-```
-
-## 🔧 核心代码解析
-
-### 1. AI 接口 (`app/api/chat/route.ts`)
+### 1. 简单记忆机制
 ```typescript
-// 核心系统提示词
-system: `你是一个待办事项智能助手，用户会用自然语言告诉你任务。
-你需要：
-- 输出友好的回复
-- 附带结构化 JSON 指令，例如：
+// 使用 useChat 的默认行为
+const { messages, ... } = useChat({
+  api: '/api/chat',
+  // messages 数组自动保持完整历史
+});
 
-\`\`\`json
-{
-  "action": "add",
-  "task": "学习JavaScript", 
-  "response": "已添加任务：学习JavaScript"
+// API 路由自动接收完整历史
+export async function POST(req: Request) {
+  const { messages } = await req.json(); // 包含所有历史消息
+  
+  const result = await streamText({
+    model: deepseek('deepseek-chat'),
+    system: systemPrompt,
+    messages, // 发送完整历史给 AI
+  });
 }
-\`\`\``
 ```
 
-### 2. 指令解析器 (`utils/instructionMapper.ts`)
+### 2. 上下文解析
 ```typescript
-// 解析 AI 返回的 JSON 指令
-export function parseInstruction(message: string): Instruction | null {
-  const match = message.match(/```json\s*([\s\S]*?)\s*```/);
-  if (match) {
-    try {
-      return JSON.parse(match[1]);
-    } catch {
-      return null;
+// 从历史消息中提取最后添加的任务
+const getLastAddedTask = () => {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (msg.role === 'assistant' && msg.content.includes('"action": "add"')) {
+      const match = msg.content.match(/"task":\s*"([^"]+)"/);
+      if (match) return match[1];
     }
   }
   return null;
-}
-
-// 执行指令
-export function execute(instruction: Instruction): ExecutionResult {
-  const { action, task } = instruction;
-  if (action === 'add' && task) {
-    todos.push(task);
-    return { success: true, message: `已添加任务：${task}` };
-  }
-  // ... 其他操作
-}
+};
 ```
 
-### 3. UI 组件 (`components/ChatSidebar.tsx`)
+### 3. AI 系统提示词增强
 ```typescript
-// 关键的 onFinish 回调
-onFinish: (message) => {
-  const instruction = parseInstruction(message.content);
-  if (instruction) {
-    const result = execute(instruction);
-    setLastResult(result.message);
-    setTodos(getTodos());
-  }
-}
+const systemPrompt = `你是一个智能待办事项助手，具有上下文记忆能力。
+
+## 上下文引用规则：
+- "刚才/最后/最近添加的": 引用最近添加的任务
+- "再加一个/再添加": 添加与上次类似的任务
+- "清空/清除": 清空所有任务
+
+请仔细分析对话历史，正确理解用户的引用意图。`;
 ```
 
 ## 🎨 界面设计
 
-### 分屏布局
-- **左侧 (1/3)**: 任务列表 + 执行结果展示
-- **右侧 (2/3)**: 聊天对话 + 输入框
+### 双视图切换
+- **对话视图**: 标准聊天界面 + 执行结果显示
+- **上下文视图**: 记忆信息可视化
+  - 最后添加的任务
+  - 最近操作历史
+  - 对话统计信息
+  - 快捷命令建议
 
-### 快捷操作
-提供预设的快捷按钮：
-- "添加学习任务"
-- "列出所有任务" 
-- "清空任务"
+### 上下文提示
+- 头部显示最后添加的任务
+- 消息计数器显示对话长度
+- 智能的占位符提示
 
 ## 🌟 学习要点
 
-### 1. JSON 指令格式
-```typescript
-interface Instruction {
-  action: string;    // 操作类型：add/list/clear
-  task?: string;     // 任务内容（仅 add 时需要）
-  response?: string; // AI 的回复消息
-}
-```
+### 1. 记忆实现对比
 
-### 2. 执行流程
-1. 用户输入自然语言
-2. AI 解析并生成包含 JSON 的回复
-3. 前端提取 JSON 指令
-4. 调用对应的本地函数
-5. 更新 UI 状态
+| 方法 | 复杂记忆系统 | 简单记忆系统 |
+|------|-------------|-------------|
+| **存储** | 专门的记忆数据库 | messages 数组 |
+| **管理** | 复杂的记忆管理 | 自动历史保持 |
+| **检索** | 智能记忆搜索 | 直接遍历历史 |
+| **同步** | 手动记忆同步 | 自动随消息同步 |
 
-### 3. 状态管理
-- 使用简单的模块级变量存储任务
-- React state 管理 UI 显示
-- 每次操作后同步状态
+### 2. 上下文理解方式
+- **客户端解析**: 从 messages 中提取关键信息
+- **AI 理解**: 通过完整历史理解上下文引用
+- **结合使用**: 客户端提示 + AI 智能理解
+
+### 3. 性能优化
+- 保持 messages 数组长度合理（AI SDK 自动处理）
+- 使用正则表达式快速解析历史
+- 避免复杂的记忆管理逻辑
 
 ## 🔄 与其他案例的关系
 
 ```
-01-todolist              ← 纯前端待办应用
-02-chatbot               ← 基础 AI 对话
-03-todolist-with-chatbot ← AI + 待办结合
-04-todolist-with-structured-ai ← 结构化输出
-→ 05.5-simple-instruction-execution ← 【当前案例】简单指令执行
-05-instruction-mapping   ← 复杂指令映射系统  
-06-context-memory        ← 上下文记忆功能
+05.5-simple-instruction-execution  ← 基础指令执行
+        ↓ 添加记忆功能
+06-simple-context-memory           ← 【当前案例】简单上下文记忆
+        ↓ 复杂化
+07-context-memory                  ← 完整的上下文记忆系统
 ```
-
-## 🚧 有意简化的功能
-
-为了保持案例的简单性，以下功能被有意省略：
-
-- ❌ 复杂的指令映射器类
-- ❌ 任务的完成/删除操作
-- ❌ 持久化存储
-- ❌ 上下文记忆
-- ❌ 错误重试机制
-- ❌ 批量操作
-- ❌ 任务优先级
-
-这些功能将在后续的 `05-instruction-mapping` 和 `06-context-memory` 案例中逐步引入。
 
 ## 💡 核心价值
 
-1. **理解 AI 指令执行的最基本原理**
-2. **掌握 JSON 解析和函数映射的技巧**  
-3. **体验完整的用户交互闭环**
-4. **为学习更复杂的案例打下基础**
+1. **理解记忆的本质**: 记忆就是保持和利用历史信息
+2. **简单而有效**: 通过 messages 历史实现强大的记忆功能
+3. **AI 驱动**: 让 AI 来理解上下文，而不是硬编码规则
+4. **可视化记忆**: 用户可以清晰看到 AI 的"记忆"内容
 
 ---
 
-这个案例专注于演示 **"AI 理解 → 结构化输出 → 本地执行"** 的核心概念，是理解智能体工作原理的重要基石。 
+这个案例演示了如何用最简单的方法实现上下文记忆：**保持完整对话历史，让 AI 来理解上下文**。 
