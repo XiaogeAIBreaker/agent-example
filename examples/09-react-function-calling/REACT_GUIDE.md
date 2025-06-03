@@ -24,7 +24,7 @@ AI: [直接调用 addTodo]
 
 ### ReAct模式（09案例）
 ```
-用户: "添加学习JavaScript任务，然后显示所有任务"
+用户: "添加学习JavaScript任务"
 
 AI思考: "这个请求包含两个操作：
 1. 添加一个学习JavaScript的任务

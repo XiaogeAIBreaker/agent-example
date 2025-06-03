@@ -95,7 +95,7 @@ export default function TodoList() {
               ReAct模式: 推理(Reasoning) + 行动(Acting) | 支持复合指令 | 支持操作: {getSupportedActions().join(', ')}
             </p>
             <p className="text-center text-xs text-gray-500 dark:text-gray-500 mt-1">
-              💡 示例: &ldquo;添加学习任务，然后显示所有任务&rdquo; - AI会逐步思考并执行
+              💡 示例: &ldquo;添加学习任务&rdquo; - AI会逐步思考并执行
             </p>
           </div>
           
