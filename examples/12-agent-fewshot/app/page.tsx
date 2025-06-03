@@ -89,7 +89,7 @@ export default function TodoList() {
               Chain of Thought模式: 思考过程可视化 | 透明化决策 | 支持操作: {getSupportedActions().join(', ')}
             </p>
             <p className="text-center text-xs text-gray-500 dark:text-gray-500 mt-1">
-              💡 示例: &ldquo;我想要掌握 Node 全栈 Agent开发，帮我列出三个代办事项&rdquo; - AI会展示思考过程
+              💡 示例: &ldquo;我想要掌握 Node 全栈 Agent开发，帮我列出三个代办事项并加入列表&rdquo; - AI会展示思考过程
             </p>
           </div>
           
@@ -132,7 +132,7 @@ export default function TodoList() {
                   💡 你可以直接在此添加，或向<span className="lg:inline hidden">右侧</span><span className="lg:hidden inline">下方</span>的 AI 助手发送指令
                 </p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                  例如：&ldquo;我想要掌握 Node 全栈 Agent开发，帮我列出三个代办事项&rdquo;
+                  例如：&ldquo;我想要掌握 Node 全栈 Agent开发，帮我列出三个代办事项并加入列表&rdquo;
                 </p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                   🧠 Agent CoT会展示思考过程，让决策透明可见

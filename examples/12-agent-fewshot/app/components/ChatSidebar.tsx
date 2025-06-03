@@ -283,7 +283,7 @@ export default function ChatSidebar({ executeInstruction }: ChatSidebarProps) {
                   我会展示思考过程，让决策透明可见，帮你完成复杂任务
                 </p>
                 <div className="mt-4 text-xs space-y-1">
-                  <p>💡 试试说：&ldquo;我想要掌握 Node 全栈 Agent开发，帮我列出三个代办事项&rdquo;</p>
+                  <p>💡 试试说：&ldquo;我想要掌握 Node 全栈 Agent开发，帮我列出三个代办事项并加入列表&rdquo;</p>
                   <p>💡 或者：&ldquo;分析当前任务列表，优化我的工作计划&rdquo;</p>
                 </div>
               </div>
