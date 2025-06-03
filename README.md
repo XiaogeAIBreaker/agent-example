@@ -1,175 +1,173 @@
-# 具有结构化AI操作的智能待办事项应用
+# AI智能待办事项应用 - 渐进式教学案例
 
-这是一个具有**结构化AI操作**功能的待办事项应用。AI助手不仅能对话，还能通过输出结构化JSON直接操作待办事项，实现真正的智能交互。
+这是一个展示**AI应用开发演进过程**的教学项目，从基础的待办事项应用逐步发展到具有**Function Calling**功能的智能AI助手。
 
-## 🚀 核心特性
+## 🎯 项目概述
 
-### 结构化AI操作
-- **JSON指令输出**: AI助手输出标准JSON格式的操作指令
-- **安全解析**: 使用安全的JSON解析工具处理AI输出
-- **实时执行**: AI指令自动解析并执行相应操作
-- **操作反馈**: 执行结果即时反馈给用户
+本项目包含8个渐进式示例，展示了现代AI应用开发的完整演进路径：
 
-### 支持的AI操作
-- 🆕 **添加任务**: `{"action": "add", "task": "买牛奶"}`
-- ✅ **标记完成**: `{"action": "complete", "task": "买牛奶"}`
-- 🗑️ **删除任务**: `{"action": "delete", "task": "买牛奶"}`
-- 📋 **查看列表**: `{"action": "list"}`
+1. **01-todolist**: 基础待办事项应用
+2. **02-chatbot**: 集成AI聊天功能
+3. **03-todolist-with-chatbot**: AI聊天 + 待办事项
+4. **04-todolist-with-structured-ai**: 结构化AI操作
+5. **05-simple-instruction-execution**: 简单指令执行
+6. **06-simple-context-memory**: 上下文记忆
+7. **07-enhanced-prompt**: 增强提示 + Token控制
+8. **08-function-calling**: **Function Calling机制** ⭐
 
-### 智能交互示例
+## 🚀 最新功能：Function Calling (08示例)
+
+### 核心特性
+- **原生Function Calling**: 使用AI SDK的原生工具调用机制
+- **类型安全**: 通过Zod定义函数参数schema
+- **智能映射**: AI自动选择合适的函数执行操作
+- **上下文感知**: 支持"刚才那个"、"再加一个"等上下文引用
+
+### 技术优势
+```typescript
+// 传统方式（07示例）
+AI: 生成JSON → {"action": "add", "task": "学习Python"}
+前端: 解析JSON → 执行函数
+
+// Function Calling（08示例）
+AI: 直接调用 → addTodo({task: "学习Python"})
+前端: 接收调用 → 执行函数
 ```
-用户: "帮我添加任务：学习编程"
-AI: 好的，我来帮你添加这个任务。{"action": "add", "task": "学习编程"}
-系统: ✅ 已添加任务："学习编程"
 
-用户: "完成买牛奶的任务"
-AI: 我来帮你标记完成。{"action": "complete", "task": "买牛奶"}
-系统: ✅ 已标记完成："买牛奶"
+### 支持的函数
+- `addTodo`: 添加新任务
+- `completeTodo`: 完成任务
+- `deleteTodo`: 删除任务
+- `listTodos`: 列出所有任务
+- `clearCompleted`: 清除已完成任务
+- `clearAll`: 清除所有任务
 
-用户: "删除过期的任务"
-AI: 好的，我来删除这个任务。{"action": "delete", "task": "过期任务"}
-系统: ✅ 已删除任务："过期任务"
+## 📚 学习路径
+
+### 初级阶段 (01-04)
+- 基础React应用开发
+- AI聊天集成
+- 结构化AI输出
+
+### 中级阶段 (05-07)
+- 指令映射系统
+- 上下文记忆机制
+- Token长度控制
+
+### 高级阶段 (08)
+- **Function Calling机制**
+- 类型安全的AI工具
+- 现代AI应用架构
+
+## 🛠️ 技术栈
+
+- **前端**: Next.js 15.3.2 + React 19
+- **AI集成**: Vercel AI SDK + DeepSeek
+- **类型安全**: TypeScript + Zod
+- **样式**: Tailwind CSS
+- **Function Calling**: 原生工具调用机制
+
+## 🚀 快速开始
+
+### 体验最新的Function Calling功能
+
+```bash
+# 进入08示例目录
+cd examples/08-function-calling
+
+# 安装依赖
+npm install
+
+# 配置API Key
+cp env.example .env.local
+# 编辑 .env.local 添加你的 DEEPSEEK_API_KEY
+
+# 启动应用
+npm run dev
 ```
 
-## 🛠️ 技术实现
+### 测试Function Calling
+```
+用户: "帮我添加一个学习Python的任务"
+AI: 调用 addTodo({task: "学习Python"})
+系统: ✅ 已添加任务
 
-### AI Prompt Engineering
-- **结构化指令**: 详细的system prompt指导AI输出标准JSON
-- **操作规范**: 明确定义支持的操作类型和参数格式
-- **上下文感知**: AI助手了解当前任务状态
+用户: "完成刚才那个任务"
+AI: 调用 completeTodo({taskIdentifier: "学习Python"})
+系统: ✅ 任务已完成
 
-### JSON解析与安全
-- **正则提取**: 从AI回复中安全提取JSON部分
-- **格式验证**: 验证JSON结构和字段类型
-- **错误处理**: 优雅处理解析失败的情况
-
-### 前端集成
-- **实时监听**: 监听AI消息中的操作指令
-- **自动执行**: 解析到有效操作后自动执行
-- **状态同步**: 操作结果实时更新到界面
-
-## 🎯 技术栈
-
-- **前端框架**: Next.js 15.3.2 with React 19
-- **AI集成**: Vercel AI SDK with DeepSeek
-- **类型安全**: TypeScript + 严格类型检查
-- **样式系统**: Tailwind CSS
-- **状态管理**: React Hooks
+用户: "再加一个类似的"
+AI: 调用 addTodo({task: "学习JavaScript"})
+系统: ✅ 已添加相关任务
+```
 
 ## 📁 项目结构
 
 ```
-app/
-├── api/chat/route.ts          # 结构化AI API路由
-├── components/
-│   └── ChatSidebar.tsx        # 智能聊天侧边栏
-├── utils/
-│   └── jsonParser.ts          # JSON安全解析工具
-├── page.tsx                   # 主页面（集成AI操作）
-└── globals.css               # 全局样式
+examples/
+├── 01-todolist/                    # 基础待办事项
+├── 02-chatbot/                     # AI聊天机器人
+├── 03-todolist-with-chatbot/       # 聊天+待办事项
+├── 04-todolist-with-structured-ai/ # 结构化AI操作
+├── 05-simple-instruction-execution/# 指令执行系统
+├── 06-simple-context-memory/       # 上下文记忆
+├── 07-enhanced-prompt/             # 增强提示+Token控制
+└── 08-function-calling/            # Function Calling ⭐
+    ├── app/
+    │   ├── api/chat/route.ts       # Function Calling API
+    │   ├── components/
+    │   │   └── ChatSidebar.tsx     # 工具调用处理
+    │   └── utils/
+    │       └── instructionMapper.ts # 指令映射器
+    ├── FUNCTION_CALLING_GUIDE.md   # 详细技术指南
+    ├── QUICK_START.md              # 快速启动指南
+    └── README.md                   # 功能说明
 ```
-
-## 🚀 快速开始
-
-### 1. 安装依赖
-```bash
-npm install
-```
-
-### 2. 配置环境变量
-创建 `.env.local` 文件：
-```bash
-# 复制示例文件
-cp .env.local.example .env.local
-```
-
-编辑文件，添加DeepSeek API密钥：
-```bash
-DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
-
-### 3. 启动开发服务器
-```bash
-npm run dev
-```
-
-访问 [http://localhost:3000](http://localhost:3000) 体验应用。
-
-## 🎮 使用指南
-
-### 基本操作
-1. 在左侧输入框手动添加任务
-2. 点击复选框标记完成
-3. 点击垃圾桶图标删除任务
-
-### AI智能操作
-在右侧AI助手中尝试以下指令：
-
-#### 添加任务
-- "帮我添加任务：买牛奶"
-- "新建一个任务：学习编程"
-- "添加：完成项目报告"
-
-#### 标记完成
-- "完成买牛奶这个任务"
-- "标记学习编程为已完成"
-- "把报告写完了"
-
-#### 删除任务
-- "删除买牛奶任务"
-- "移除过期的任务"
-- "删掉不需要的任务"
-
-#### 查看列表
-- "显示我的任务列表"
-- "看看我有什么任务"
-- "列出所有任务"
-
-## 🔧 核心算法
-
-### JSON解析流程
-```typescript
-1. 正则匹配提取JSON片段
-2. JSON.parse()安全解析
-3. 结构验证（action类型、必需字段）
-4. 模糊匹配任务名称
-5. 执行操作并返回结果
-```
-
-### 任务匹配算法
-```typescript
-// 支持模糊匹配，提高用户体验
-const todoToComplete = todos.find(todo => 
-  todo.text.toLowerCase().includes(taskText.toLowerCase()) ||
-  taskText.toLowerCase().includes(todo.text.toLowerCase())
-);
-```
-
-## 🛡️ 安全特性
-
-- **输入验证**: 严格验证JSON结构和字段类型
-- **错误处理**: 优雅处理所有可能的解析错误
-- **操作限制**: 仅支持预定义的安全操作
-- **状态隔离**: 操作仅影响当前用户的任务
 
 ## 🎓 教学价值
 
-这个项目展示了：
-1. **Prompt Engineering**: 如何设计有效的AI提示词
-2. **结构化输出**: 让AI输出可执行的结构化数据
-3. **安全解析**: 如何安全处理AI生成的代码/数据
-4. **前端集成**: 将AI能力无缝集成到用户界面
-5. **错误处理**: 构建健壮的AI应用的最佳实践
+### 核心学习点
+1. **AI应用演进**: 从简单聊天到智能工具调用
+2. **Function Calling**: 现代AI应用的核心机制
+3. **类型安全**: 使用Zod确保参数类型安全
+4. **上下文处理**: 智能的对话上下文管理
+5. **错误处理**: 健壮的AI应用错误处理
 
-## 🔄 相比上一版本的改进
+### 技术对比
 
-| 功能 | 03版本 | 04版本 |
-|------|--------|--------|
-| AI交互 | 纯对话 | 结构化操作 |
-| 操作方式 | 手动点击 | AI直接执行 |
-| 用户体验 | 传统交互 | 智能自动化 |
-| 技术复杂度 | 简单集成 | 高级AI应用 |
+| 特性 | 传统方式 | Function Calling |
+|------|----------|------------------|
+| 指令格式 | JSON字符串 | 原生函数调用 |
+| 类型安全 | 手动验证 | Zod自动验证 |
+| AI理解 | 学习JSON格式 | 原生函数理解 |
+| 扩展性 | 修改解析逻辑 | 添加工具定义 |
+| 错误处理 | JSON解析错误 | 类型验证错误 |
+
+## 🔍 版本演进
+
+| 版本 | 核心功能 | 技术亮点 |
+|------|----------|----------|
+| 01 | 基础待办事项 | React基础 |
+| 02 | AI聊天 | AI SDK集成 |
+| 03 | 聊天+待办 | 组件组合 |
+| 04 | 结构化AI | JSON指令 |
+| 05 | 指令执行 | 映射系统 |
+| 06 | 上下文记忆 | 状态管理 |
+| 07 | Token控制 | 性能优化 |
+| 08 | **Function Calling** | **现代AI架构** |
+
+## 🚧 未来扩展
+
+- 多模态Function Calling
+- 异步工具处理
+- 工具权限控制
+- 动态工具注册
+- 工具组合调用
 
 ## 📝 许可证
 
 MIT License
+
+---
+
+🌟 **推荐从08示例开始体验最新的Function Calling功能！**
