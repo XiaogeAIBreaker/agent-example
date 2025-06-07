@@ -1,0 +1,15 @@
+{
+  "name": "rag-vector-remote",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "upload": "node scripts/uploadToSupabase.mjs",
+    "search": "node scripts/searchFromSupabase.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.50.0",
+    "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
+    "@tensorflow/tfjs-node": "^4.22.0",
+    "dotenv": "^16.5.0"
+  }
+}
