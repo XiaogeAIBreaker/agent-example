@@ -1,5 +1,5 @@
 {
-  "name": "rag-doc-vector",
+  "name": "rag-vector-simple",
   "version": "1.0.0",
   "description": "RAG文档块向量化示例 - Node.js版本",
   "type": "module",
