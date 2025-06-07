@@ -1,0 +1,28 @@
+{
+  "name": "rag-doc-vector",
+  "version": "1.0.0",
+  "description": "RAG文档块向量化示例 - Node.js版本",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "node scripts/buildVectorIndex.mjs",
+    "query": "node scripts/queryVectorIndex.mjs",
+    "start": "npm run build && npm run query"
+  },
+  "keywords": [
+    "rag",
+    "vector",
+    "faiss",
+    "langchain",
+    "embedding"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@huggingface/transformers": "^3.5.0",
+    "@langchain/community": "^0.3.0",
+    "@langchain/core": "^0.3.0",
+    "faiss-node": "^0.5.1",
+    "langchain": "^0.3.0"
+  }
+}
