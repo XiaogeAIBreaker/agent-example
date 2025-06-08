@@ -1,0 +1,41 @@
+{
+  "name": "16-rag-agent-langchain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "RAG Few-shot TodoList Agent with LangChain - 使用LangChain优化提示词管理的智能助手",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "upload-knowledge": "node scripts/uploadKnowledge.mjs",
+    "test-search": "node scripts/testSearch.mjs",
+    "system-diagnosis": "node scripts/systemDiagnosis.mjs"
+  },
+  "dependencies": {
+    "@ai-sdk/deepseek": "^0.0.5",
+    "@langchain/core": "^0.3.57",
+    "@supabase/supabase-js": "^2.39.7",
+    "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
+    "@tensorflow/tfjs-node": "^4.22.0",
+    "ai": "^3.4.9",
+    "autoprefixer": "^10.4.21",
+    "dotenv": "^16.4.5",
+    "langchain": "^0.3.27",
+    "next": "^14.2.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.0",
+    "ignore-loader": "^0.1.2",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}

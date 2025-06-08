@@ -6,7 +6,7 @@
 
 ## 🎯 项目概述
 
-本项目包含**15个渐进式示例**，完整覆盖现代AI应用开发技术栈：
+本项目包含**16个渐进式示例**，完整覆盖现代AI应用开发技术栈：
 
 ### 📚 学习路径总览
 
@@ -16,10 +16,12 @@
 | **进阶篇** | 05-08 | Function Calling | ⭐⭐ |
 | **智能Agent篇** | 09-12 | ReAct + Agent循环 | ⭐⭐⭐ |
 | **RAG向量篇** | 13-15 | 向量检索 + 知识库 | ⭐⭐⭐⭐ |
+| **企业级架构** | 16 | LangChain + 生产级系统 | ⭐⭐⭐⭐⭐ |
 
 ### 🔥 最新亮点
 
-- **15-rag-agent**: 🆕 **RAG + Few-shot融合** - 结合向量检索和智能推理
+- **16-rag-agent-langchain**: 🆕 **LangChain企业级架构** - 模块化+工具链+生产就绪
+- **15-rag-agent**: **RAG + Few-shot融合** - 结合向量检索和智能推理
 - **14-rag-vector-remote**: **云端RAG数据库** - Supabase + TensorFlow生产级方案
 - **13-rag-doc-chunk**: **本地RAG向量化** - LangChain + FAISS快速原型
 - **12-agent-fewshot**: **Few-shot学习** - 多样化表达理解能力
@@ -62,11 +64,14 @@ JSON解析 → {"action": "add", "task": "学习Python"}
 ### 🎯 推荐体验路径
 
 ```bash
-# 🆕 最新：RAG智能助手 (推荐)
-cd examples/15-rag-agent
-npm install && npm run dev
+# 🆕 最新：LangChain企业级智能助手 (强烈推荐)
+cd examples/16-rag-agent-langchain
+npm install && npm run system-diagnosis && npm run dev
 
-# 🧠 智能Agent体验
+# 🧠 RAG智能助手
+cd examples/15-rag-agent       # RAG + Few-shot融合
+
+# 🤖 智能Agent体验
 cd examples/12-agent-fewshot    # Few-shot学习
 cd examples/11-agent-cot        # 思考过程可视化
 cd examples/10-agent-loop       # 自主执行闭环
@@ -114,6 +119,11 @@ npm run upload && npm run search
 - **Supabase** + **pgvector** (云端向量数据库)
 - **TensorFlow.js** + **HuggingFace** (向量化模型)
 
+### 企业级架构
+- **LangChain Framework** - 模块化AI应用框架
+- **分层架构设计** - Agent/Chain/Tool/Memory分离
+- **完整工具链** - 诊断/测试/监控/维护工具
+
 ## 📁 项目结构
 
 ```
@@ -132,7 +142,8 @@ examples/
 ├── 12-agent-fewshot/              # Few-shot学习 ⭐⭐⭐⭐
 ├── 13-rag-doc-chunk/              # 本地RAG ⭐⭐⭐⭐⭐
 ├── 14-rag-vector-remote/          # 云端RAG ⭐⭐⭐⭐⭐⭐
-└── 15-rag-agent/                  # RAG智能助手 🆕
+├── 15-rag-agent/                  # RAG智能助手 
+└── 16-rag-agent-langchain/        # LangChain企业级架构 🆕
 ```
 
 ## 🎓 学习建议
@@ -145,6 +156,7 @@ examples/
 | **⭐ 有经验** | 08→09→10 | Agent推理和执行闭环 |
 | **🚀 高级者** | 10→11→12 | CoT思考链和Few-shot学习 |
 | **🎯 专家级** | 13→14→15 | RAG向量数据库和融合系统 |
+| **🏆 架构师** | 16 | LangChain企业级架构设计 |
 
 ### 功能演示示例
 
@@ -176,6 +188,10 @@ AI: 🧠思考过程 → 📋执行计划 → ✅执行结果
 # RAG智能助手
 查询: "记一下明天要做的事"
 系统: 向量检索 + Few-shot推理 → 智能理解 → 精准回答
+
+# LangChain企业级架构
+查询: "给我来点轻松的安排"
+系统: AgentManager → RAGRetriever → TaskChain → 完整CoT流程
 ```
 
 ## 🎯 教学价值
@@ -189,14 +205,15 @@ AI: 🧠思考过程 → 📋执行计划 → ✅执行结果
 6. **Few-shot学习**: 通过示例提升AI理解能力
 7. **RAG向量化**: 检索增强生成的完整实现
 8. **生产级部署**: 从原型到生产的技术选型
+9. **LangChain架构**: 企业级模块化AI应用框架
 
 ### 技术发展对比
 
-| 特性 | Function Calling | ReAct Agent | Few-shot CoT | RAG向量化 |
-|------|------------------|-------------|--------------|-----------|
-| **理解能力** | 函数调用 | 复合指令 | 多样表达 | 语义检索 |
-| **执行模式** | 单次调用 | 多步推理 | 透明思考 | 知识增强 |
-| **适用场景** | 基础工具 | 复杂任务 | 智能交互 | 知识问答 |
+| 特性 | Function Calling | ReAct Agent | Few-shot CoT | RAG向量化 | LangChain架构 |
+|------|------------------|-------------|--------------|-----------|---------------|
+| **理解能力** | 函数调用 | 复合指令 | 多样表达 | 语义检索 | 企业级智能 |
+| **执行模式** | 单次调用 | 多步推理 | 透明思考 | 知识增强 | 模块化架构 |
+| **适用场景** | 基础工具 | 复杂任务 | 智能交互 | 知识问答 | 生产部署 |
 
 ## 🚧 技术路线图
 
@@ -206,12 +223,14 @@ AI: 🧠思考过程 → 📋执行计划 → ✅执行结果
 - Few-shot学习 + RAG向量检索
 - 本地FAISS + 云端Supabase方案
 - RAG + Agent融合智能助手
+- LangChain企业级架构 + 完整工具链
 
 ### 🔮 未来扩展
 - 多模态Function Calling
 - 多Agent协作框架  
 - 实时向量更新机制
 - 长期记忆管理系统
+- 微服务化架构部署
 
 ---
 
