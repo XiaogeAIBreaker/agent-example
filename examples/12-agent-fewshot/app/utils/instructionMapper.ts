@@ -102,15 +102,4 @@ export class InstructionMapper {
 // 创建全局实例
 export const instructionMapper = new InstructionMapper();
 
-// 辅助函数：根据任务名称查找todo项
-export function findTodoByText(todos: Todo[], taskText: string): Todo | undefined {
-  return todos.find(todo => 
-    todo.text.toLowerCase().includes(taskText.toLowerCase()) ||
-    taskText.toLowerCase().includes(todo.text.toLowerCase())
-  );
-}
-
-// 辅助函数：根据ID查找todo项
-export function findTodoById(todos: Todo[], id: number): Todo | undefined {
-  return todos.find(todo => todo.id === id);
-} 
+ 
