@@ -1,4 +1,4 @@
-import { getVectorService } from './vectorService';
+
 
 // RAG服务类
 export class RAGService {
