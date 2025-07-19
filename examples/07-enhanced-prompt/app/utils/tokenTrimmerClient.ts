@@ -44,40 +44,6 @@ function estimateTokens(text: string): number {
   return Math.ceil(chineseChars * 1.5 + englishWords * 1.2 + otherChars * 0.3);
 }
 
-// 客户端版本：异步Token计算
-export async function trimMessagesToTokenLimit(
-  messages: Message[],
-  maxTokens: number = 3000
-): Promise<Message[]> {
-  const enc = await initTiktoken();
-  
-  let totalTokens = 0;
-  const trimmed: Message[] = [];
-
-  // 从后往前处理，保留最近消息
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    // 跳过 'data' 类型的消息，因为它们不包含文本内容
-    if (msg.role === 'data') continue;
-    
-    let tokenCount: number;
-    if (enc) {
-      tokenCount = enc.encode(msg.content).length + 4; // buffer for metadata
-    } else {
-      tokenCount = estimateTokens(msg.content) + 4; // 使用估算方法
-    }
-
-    if (totalTokens + tokenCount > maxTokens) {
-      break;
-    }
-
-    trimmed.unshift(msg); // 保留消息
-    totalTokens += tokenCount;
-  }
-
-  return trimmed;
-}
-
 // 计算单条消息的Token数量
 export async function getMessageTokenCount(
   message: Message
